@@ -1,0 +1,7 @@
+name: PlaytimeLimit
+version: '${version}'
+main: com.github.b1kku.playtimelimit.PlaytimeLimit
+api-version: 1.18
+authors: [ B1kku ]
+description: Limits player playtime on a configurable manner.
+website: github.com/b1kku
