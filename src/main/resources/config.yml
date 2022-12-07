@@ -1,1 +1,12 @@
-Time: 5
+playTimeLimitHours: 3
+# Time it takes to update the time limit, increase to reduce server load, don't set too high as a logout or crash would not count the time.
+updateTimeSeconds: 20
+# Same, but saves to disk, these are only important for crashes or server shutdowns.
+backupTimeSeconds: 40
+# Ammount of days it takes for the server to consider a time reset.
+resetTimeDays: 7
+# Hour of the day the server starts to consider a time reset, mainly here if you want to set daily resets.
+resetTimeHour: 0000
+# Whether or not to show the time limit bar by default.
+showBarDefault: false
+countAFKs: false

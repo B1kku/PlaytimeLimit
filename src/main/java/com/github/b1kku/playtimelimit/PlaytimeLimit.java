@@ -1,7 +1,7 @@
 package com.github.b1kku.playtimelimit;
 
-import java.util.logging.Level;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public final class PlaytimeLimit extends JavaPlugin {
 
@@ -13,9 +13,20 @@ public final class PlaytimeLimit extends JavaPlugin {
         plugin = this;
         getConfig().options().copyDefaults();
         saveDefaultConfig();
+        PlayTimeData.setup();
 
+        new BukkitRunnable() {
+            public void run() {
+                PlayTimeData.consumeTime();
+            }
+        }.runTaskTimer(this, 0L, 20L * getConfig().getInt("updateTimeSeconds"));
         //DEBUG
-        getLogger().log(Level.WARNING, "" + getConfig().getInt("Time"));
+        new BukkitRunnable() {
+            public void run() {
+                PlayTimeData.save();
+                PlayTimeData.reload();
+            }
+        }.runTaskTimer(this, 0L, 20L * getConfig().getInt("backupTimeSeconds"));
     }
 
     @Override
