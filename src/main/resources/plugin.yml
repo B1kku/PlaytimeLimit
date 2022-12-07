@@ -5,3 +5,9 @@ api-version: 1.18
 authors: [ B1kku ]
 description: Limits player playtime on a configurable manner.
 website: github.com/b1kku
+commands:
+  resetTime:
+    description: Resets the playtime of everyone.
+  playTime:
+    description: Adds playtime to someone.
+    usage: /<command> [add/reduce] player seconds
