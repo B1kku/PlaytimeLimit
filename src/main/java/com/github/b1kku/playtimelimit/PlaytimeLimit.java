@@ -28,6 +28,7 @@ public final class PlaytimeLimit extends JavaPlugin {
 
         //If next reset doesn't exist, create it.
         if (getConfig().get("nextReset") == null){
+            plugin.reloadConfig();
             getConfig().set("nextReset", PlayTimeData.getResetDate());
             saveConfig();
         }
@@ -43,8 +44,7 @@ public final class PlaytimeLimit extends JavaPlugin {
         new BukkitRunnable() {
             public void run() {
                 if (LocalDateTime.parse(Objects.requireNonNull(getConfig().getString("nextReset")), DateTimeFormatter.ISO_DATE_TIME)
-                        .isBefore(LocalDateTime.now()))
-                {
+                        .isBefore(LocalDateTime.now())) {
                     PlayTimeData.reset();
                 }
                 else {

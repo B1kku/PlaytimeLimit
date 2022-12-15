@@ -2,11 +2,23 @@ package com.github.b1kku.playtimelimit;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.logging.Level;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.bossbar.BossBar.Color;
+import net.kyori.adventure.bossbar.BossBar.Overlay;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -18,6 +30,7 @@ public class PlayTimeData {
     private static FileConfiguration playTimesFile;
     private static final Plugin plugin = PlaytimeLimit.getPlugin();
     private static Map<String, Object> playerPlayTimes;
+    private static Map<String, BossBar> playerBossBars = new HashMap<>();
 
     //Makes a new file if it doesn't exist, loads it as a yaml and populates the Map with pre-existing playtimes.
     public static void setup(){
@@ -41,13 +54,38 @@ public class PlayTimeData {
                 (player -> {
                     if (playerPlayTimes.get(player.getName()) == null){
                         playerPlayTimes.put(player.getName(),
+                                //Initialize, since time has already counted down we also take down the time.
                                 plugin.getConfig().getInt("playTimeLimitSeconds") - plugin.getConfig().getInt("updateTimeSeconds"));
                     } else {
                         playerPlayTimes.put(player.getName(),
+                                //Reduce the current playtime on hashmap.
                                 (Integer)playerPlayTimes.get(player.getName()) - plugin.getConfig().getInt("updateTimeSeconds"));
                     }
-                    //Kick player if they're below 0, AKA time is consumed.
-                    if (Integer.parseInt(String.valueOf(playerPlayTimes.get(player.getName()))) <= 0){
+
+                    //Date formatting for bossbar, since timezones can get messy I have to set a random timezone first.
+                    Date date = new Date((int)playerPlayTimes.get(player.getName())*1000);
+                    DateFormat dateFormat = new SimpleDateFormat("HH:mm");
+                    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    String formattedTime = dateFormat.format(date);
+                    TextComponent text = Component.text("Time left:: ")
+                            .style(Style.style(TextColor.fromCSSHexString("#00ffff")).decorate(TextDecoration.BOLD));
+                    //If it doesn't exist, we create one, if it does, we set the new time.
+                    if (playerBossBars.get(player.getName()) == null){
+                        playerBossBars.put(player.getName(),
+                                BossBar.bossBar(text.append(Component.text(formattedTime)),
+                                        getPercentageTimeLeft(player.getName()),
+                                        Color.BLUE, Overlay.NOTCHED_10));
+                        player.showBossBar(playerBossBars.get(player.getName()));
+                    }
+                    else {
+                        BossBar bar = playerBossBars.get(player.getName());
+                        bar.name(text.append(Component.text(formattedTime)));
+                        bar.progress(getPercentageTimeLeft(player.getName()));
+                    }
+
+                    //Kick player if they're below 0, AKA time is consumed. And hide the bar.
+                    if (((int)playerPlayTimes.get(player.getName())) <= 0){
+                        playerBossBars.remove(player.getName());
                         player.kick(Component.text("You've exceeded the playtime"));
                     }
                 }));
@@ -73,6 +111,7 @@ public class PlayTimeData {
         playerPlayTimes.clear();
         file.delete();
         setup();
+        plugin.reloadConfig();
         plugin.getConfig().set("nextReset", getResetDate());
         plugin.saveConfig();
     }
@@ -84,12 +123,21 @@ public class PlayTimeData {
                 .plusDays(plugin.getConfig().getInt("resetTimeDays")).format(DateTimeFormatter.ISO_DATE_TIME);
     }
 
+    private static float getPercentageTimeLeft(String name){
+       float percentage = (int)playerPlayTimes.get(name) * 100.0f / plugin.getConfig().getInt("playTimeLimitSeconds") / 100.0f;
+       return Math.min(percentage, 1.0F);
+    }
+
     public static FileConfiguration getPlayTimesFile(){
         return playTimesFile;
     }
 
     public static Map<String, Object> getPlayerPlayTimes(){
         return playerPlayTimes;
+    }
+
+    public static Map<String, BossBar> getPlayerBossBars(){
+        return playerBossBars;
     }
 
 }

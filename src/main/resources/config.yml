@@ -7,6 +7,3 @@ backupTimeSeconds: 40
 resetTimeDays: 7
 # Hour of the day the server starts to consider a time reset, mainly here if you want to set daily resets.
 resetTimeHour: 0
-# Whether or not to show the time limit bar by default.
-showBarDefault: false
-
